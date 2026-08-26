@@ -36,40 +36,45 @@ export function useHeroAnimation({ canvasRef, containerRef }: UseHeroAnimationOp
     }
   }, []);
 
-  const drawToCanvas = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    img: HTMLImageElement
-  ) => {
-    const dpr = window.devicePixelRatio || 1;
-    const canvasWidth = canvas.width / dpr;
-    const canvasHeight = canvas.height / dpr;
+  const drawToCanvas = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      canvas: HTMLCanvasElement,
+      img: HTMLImageElement
+    ) => {
+      const dpr = window.devicePixelRatio || 1;
+      const canvasWidth = canvas.width / dpr;
+      const canvasHeight = canvas.height / dpr;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const imgRatio = img.naturalWidth / img.naturalHeight || 16 / 9;
-    const canvasRatio = canvasWidth / canvasHeight;
+      const imgRatio = img.naturalWidth / img.naturalHeight || 16 / 9;
+      const canvasRatio = canvasWidth / canvasHeight;
 
-    let drawWidth: number;
-    let drawHeight: number;
-    let offsetX = 0;
-    let offsetY = 0;
+      let drawWidth: number;
+      let drawHeight: number;
+      let offsetX = 0;
+      let offsetY = 0;
 
-    if (canvasRatio > imgRatio) {
-      drawWidth = canvasWidth;
-      drawHeight = canvasWidth / imgRatio;
-      offsetY = (canvasHeight - drawHeight) / 2;
-    } else {
-      drawHeight = canvasHeight;
-      drawWidth = canvasHeight * imgRatio;
-      offsetX = (canvasWidth - drawWidth) / 2;
-    }
+      if (canvasRatio > imgRatio) {
+        drawWidth = canvasWidth;
+        drawHeight = canvasWidth / imgRatio;
+        offsetY = (canvasHeight - drawHeight) / 2;
+      } else {
+        // Mobile Portrait: fit to screen width, centered vertically
+        drawWidth = canvasWidth;
+        drawHeight = canvasWidth / imgRatio;
+        offsetX = 0;
+        offsetY = (canvasHeight - drawHeight) / 2;
+      }
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-    ctx.restore();
-  };
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      ctx.restore();
+    },
+    []
+  );
 
   // Draw a specific frame onto the canvas
   const drawFrame = useCallback(
@@ -81,77 +86,100 @@ export function useHeroAnimation({ canvasRef, containerRef }: UseHeroAnimationOp
       if (!ctx) return;
 
       const img = imagesRef.current.get(frameIndex);
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+      if (!img || !img.complete || img.naturalWidth === 0) {
+        // Fallback to nearest loaded frame for instant paint
+        for (let diff = 1; diff <= 15; diff++) {
+          const fallback =
+            imagesRef.current.get(frameIndex - diff) || imagesRef.current.get(frameIndex + diff);
+          if (fallback && fallback.complete && fallback.naturalWidth > 0) {
+            drawToCanvas(ctx, canvas, fallback);
+            return;
+          }
+        }
+        return;
+      }
 
       drawToCanvas(ctx, canvas, img);
     },
-    [canvasRef]
+    [canvasRef, drawToCanvas]
   );
 
-  // Preload frames progressively
-  useEffect(() => {
-    let isCancelled = false;
-    let loaded = 0;
+  const drawFrameRef = useRef(drawFrame);
+  drawFrameRef.current = drawFrame;
 
-    // Load first frame immediately
-    const firstImg = new Image();
-    firstImg.src = FRAME_PATH_TEMPLATE(1);
-    firstImg.onload = () => {
-      if (isCancelled) return;
-      imagesRef.current.set(1, firstImg);
-      loaded++;
-      setLoadedCount(loaded);
-      drawFrame(1);
+  // Rock-solid frame preloader for desktop & mobile
+  useEffect(() => {
+    let active = true;
+    let count = 0;
+
+    const onImageLoaded = (index: number, img: HTMLImageElement) => {
+      if (!active) return;
+      imagesRef.current.set(index, img);
+      count++;
+      setLoadedCount(count);
+
+      if (index === 1 || index === currentFrameRef.current) {
+        drawFrameRef.current(index);
+      }
+
+      if (count >= 10) {
+        setIsReady(true);
+      }
     };
 
-    // Preload milestone frames (every 8th frame)
-    const milestoneIndices: number[] = [];
-    for (let i = 1; i <= TOTAL_FRAMES; i += 8) {
-      milestoneIndices.push(i);
-    }
+    const loadSingleImage = (index: number) => {
+      const img = new Image();
+      img.onload = () => onImageLoaded(index, img);
+      img.onerror = () => {
+        if (!active) return;
+        count++;
+        setLoadedCount(count);
+      };
+      img.src = FRAME_PATH_TEMPLATE(index);
 
+      // Instant cache check
+      if (img.complete && img.naturalWidth > 0) {
+        onImageLoaded(index, img);
+      }
+    };
+
+    // 1. First frame loads immediately
+    loadSingleImage(1);
+
+    // 2. High priority milestone frames (every 6th frame for instant scrub response)
+    const priorityIndices: number[] = [];
+    for (let i = 2; i <= TOTAL_FRAMES; i += 6) {
+      priorityIndices.push(i);
+    }
+    priorityIndices.forEach((idx) => loadSingleImage(idx));
+
+    // 3. Batch load remaining frames in small chunks to avoid mobile network bottlenecks
     const remainingIndices: number[] = [];
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
-      if (!milestoneIndices.includes(i) && i !== 1) {
+    for (let i = 2; i <= TOTAL_FRAMES; i++) {
+      if (!priorityIndices.includes(i)) {
         remainingIndices.push(i);
       }
     }
 
-    const loadIndex = (index: number) => {
-      const img = new Image();
-      img.src = FRAME_PATH_TEMPLATE(index);
-      img.onload = () => {
-        if (isCancelled) return;
-        imagesRef.current.set(index, img);
-        loaded++;
-        setLoadedCount(loaded);
+    let batchIndex = 0;
+    const batchSize = 12;
 
-        if (loaded >= 20) {
-          setIsReady(true);
-        }
-      };
-      img.onerror = () => {
-        if (isCancelled) return;
-        loaded++;
-        setLoadedCount(loaded);
-      };
-    };
+    const interval = setInterval(() => {
+      if (!active || batchIndex >= remainingIndices.length) {
+        clearInterval(interval);
+        return;
+      }
 
-    milestoneIndices.forEach((idx) => {
-      if (idx !== 1) loadIndex(idx);
-    });
-
-    const timeout = setTimeout(() => {
-      remainingIndices.forEach((idx) => {
-        loadIndex(idx);
-      });
-    }, 200);
+      const nextBatch = remainingIndices.slice(batchIndex, batchIndex + batchSize);
+      nextBatch.forEach((idx) => loadSingleImage(idx));
+      batchIndex += batchSize;
+    }, 60);
 
     return () => {
-      isCancelled = true;
-      clearTimeout(timeout);
+      active = false;
+      clearInterval(interval);
     };
-  }, [drawFrame]);
+  }, []);
 
   // Handle Resize and high-DPI scaling
   useEffect(() => {
@@ -165,14 +193,14 @@ export function useHeroAnimation({ canvasRef, containerRef }: UseHeroAnimationOp
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
 
-      drawFrame(currentFrameRef.current);
+      drawFrameRef.current(currentFrameRef.current);
     };
 
     window.addEventListener("resize", handleResize);
     handleResize();
 
     return () => window.removeEventListener("resize", handleResize);
-  }, [canvasRef, drawFrame]);
+  }, [canvasRef]);
 
   // Scroll listener with requestAnimationFrame
   useEffect(() => {
@@ -201,7 +229,7 @@ export function useHeroAnimation({ canvasRef, containerRef }: UseHeroAnimationOp
         currentFrameRef.current = targetFrame;
         if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = requestAnimationFrame(() => {
-          drawFrame(targetFrame);
+          drawFrameRef.current(targetFrame);
         });
       }
     };
@@ -213,13 +241,13 @@ export function useHeroAnimation({ canvasRef, containerRef }: UseHeroAnimationOp
       window.removeEventListener("scroll", handleScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
-  }, [containerRef, drawFrame]);
+  }, [containerRef]);
 
   return {
     loadedCount,
     totalFrames: TOTAL_FRAMES,
     progress: currentProgress,
-    isReady: isReady || loadedCount > 20,
+    isReady: isReady || loadedCount > 10,
     currentFrame: currentFrameRef.current,
   };
 }
