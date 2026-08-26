@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Light Theme Tokens */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --bg-elevated: #ffffff;
+    --bg-sidebar: #f8fafc;
+    --bg-hover: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #8c909f;
+    --border-subtle: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.16);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(15, 23, 42, 0.08);
+
+    /* Stitch Brand Accents (Light) */
+    --primary: #2563eb;
+    --primary-container: #dbeafe;
+    --secondary: #059669;
+    --secondary-container: #d1fae5;
+    --tertiary: #d97706;
+    --tertiary-container: #fef3c7;
+
+    --role-creator-bg: rgba(16, 185, 129, 0.12);
+    --role-creator-text: #059669;
+    --role-creator-border: rgba(16, 185, 129, 0.25);
+
+    --role-reviewer-bg: rgba(245, 158, 11, 0.12);
+    --role-reviewer-text: #d97706;
+    --role-reviewer-border: rgba(245, 158, 11, 0.25);
+
+    --role-critic-bg: rgba(244, 63, 94, 0.12);
+    --role-critic-text: #e11d48;
+    --role-critic-border: rgba(244, 63, 94, 0.25);
+
+    --role-optimizer-bg: rgba(6, 182, 212, 0.12);
+    --role-optimizer-text: #0891b2;
+    --role-optimizer-border: rgba(6, 182, 212, 0.25);
+
+    --role-finalizer-bg: rgba(139, 92, 246, 0.12);
+    --role-finalizer-text: #7c3aed;
+    --role-finalizer-border: rgba(139, 92, 246, 0.25);
+  }
+
+  .dark {
+    /* Exact Google Stitch Design System Colors */
+    --bg-primary: #10131a;
+    --bg-secondary: #191b23;
+    --bg-tertiary: #1d2027;
+    --bg-elevated: #272a31;
+    --bg-sidebar: #0b0e15;
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --text-primary: #e1e2ec;
+    --text-secondary: #c2c6d6;
+    --text-muted: #8c909f;
+    --border-subtle: #424754;
+    --border-strong: #8c909f;
+    --glass-bg: rgba(23, 23, 23, 0.6);
+    --glass-border: #424754;
+
+    /* Stitch Brand Accents (Dark) */
+    --primary: #adc6ff;
+    --primary-container: #4d8eff;
+    --secondary: #4edea3;
+    --secondary-container: #00a572;
+    --tertiary: #ffb786;
+    --tertiary-container: #df7412;
+
+    /* Agent Role Accent Tokens (Dark) */
+    --role-creator-bg: rgba(16, 185, 129, 0.15);
+    --role-creator-text: #4edea3;
+    --role-creator-border: rgba(78, 222, 163, 0.3);
+
+    --role-reviewer-bg: rgba(77, 142, 255, 0.15);
+    --role-reviewer-text: #adc6ff;
+    --role-reviewer-border: rgba(173, 198, 255, 0.3);
+
+    --role-critic-bg: rgba(255, 183, 134, 0.15);
+    --role-critic-text: #ffb786;
+    --role-critic-border: rgba(255, 183, 134, 0.3);
+
+    --role-optimizer-bg: rgba(6, 182, 212, 0.15);
+    --role-optimizer-text: #38bdf8;
+    --role-optimizer-border: rgba(6, 182, 212, 0.3);
+
+    --role-finalizer-bg: rgba(139, 92, 246, 0.18);
+    --role-finalizer-text: #a78bfa;
+    --role-finalizer-border: rgba(139, 92, 246, 0.35);
+  }
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* IDE-feel Scrollbar from Stitch Design */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #272a31;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #424754;
+}
+
+/* Stitch Glass Panel */
+.glass-panel {
+  background: rgba(23, 23, 23, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Shimmer Animation from Stitch */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Code block highlight styles */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1rem;
+  background: #0b0e15 !important;
+  color: #e1e2ec !important;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-subst { color: #adc6ff; font-weight: 500; }
+.hljs-string, .hljs-title, .hljs-section, .hljs-attribute, .hljs-literal, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-addition { color: #4edea3; }
+.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta { color: #8c909f; font-style: italic; }
+.hljs-number, .hljs-regexp, .hljs-link { color: #ffb786; }
+.hljs-variable, .hljs-symbol, .hljs-bullet { color: #ffdcc6; }
+.hljs-function .hljs-title { color: #d8e2ff; }

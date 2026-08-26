@@ -22,7 +22,7 @@ loadDotenv();
 const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  CORS_ORIGIN: z.string().default("http://localhost:2000,http://localhost:3000"),
 
   // Provider keys are intentionally optional at the schema level — you may only
   // have signed up for some providers yet. Each provider adapter checks for its
