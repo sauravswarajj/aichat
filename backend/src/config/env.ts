@@ -63,14 +63,18 @@ const envSchema = z.object({
   THREAD_HISTORY_LIMIT: z.coerce.number().default(10),
 });
 
-const parsed = envSchema.safeParse(process.env);
+let validatedEnv: z.infer<typeof envSchema>;
 
-if (!parsed.success) {
-  // Fail fast and loud — a misconfigured server should never limp along.
-  console.error("❌ Invalid environment configuration:");
-  console.error(parsed.error.flatten().fieldErrors);
+try {
+  validatedEnv = envSchema.parse(process.env);
+} catch (err) {
+  if (err instanceof z.ZodError) {
+    console.error("❌ Invalid environment configuration:", err.flatten().fieldErrors);
+  } else {
+    console.error("❌ Unknown environment configuration error:", err);
+  }
   process.exit(1);
 }
 
-export const env = parsed.data;
+export const env = validatedEnv;
 export const isProduction = env.NODE_ENV === "production";
