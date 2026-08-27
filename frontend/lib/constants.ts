@@ -18,14 +18,35 @@ export const PROVIDERS: {
     id: "gemini",
     name: "Google Gemini",
     badgeClass: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    description: "Multimodal and high-speed Flash & Pro reasoning models.",
-    defaultModel: "gemini-2.5-flash",
+    description: "Multimodal and ultra fast Flash & Pro models.",
+    defaultModel: "gemini-3.6-flash",
+  },
+  {
+    id: "groq",
+    name: "Groq LPU",
+    badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    description: "Ultra-fast low-latency LPU inference on open models.",
+    defaultModel: "openai/gpt-oss-120b",
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    description: "Universal API gateway proxying free & community models.",
+    defaultModel: "liquid/lfm-2.5-2.6b:free",
+  },
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    badgeClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+    description: "State-of-the-art coding, reasoning, and chat models.",
+    defaultModel: "deepseek-chat",
   },
   {
     id: "nvidia",
     name: "NVIDIA NIM",
     badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    description: "OpenAI-compatible hosted Llama & Mistral enterprise models.",
+    description: "High-throughput hosted Llama & Mistral models.",
     defaultModel: "meta/llama-3.1-70b-instruct",
   },
   {
@@ -36,159 +57,166 @@ export const PROVIDERS: {
     defaultModel: "qwen-plus",
   },
   {
-    id: "openrouter",
-    name: "OpenRouter",
-    badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-    description: "Universal unified gateway proxying top community & free models.",
-    defaultModel: "meta-llama/llama-3.3-70b-instruct:free",
-  },
-  {
-    id: "deepseek",
-    name: "DeepSeek",
-    badgeClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-    description: "High-performance coding, math, and deep reasoning models.",
-    defaultModel: "deepseek-chat",
-  },
-  {
     id: "grok",
     name: "xAI Grok",
     badgeClass: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-    description: "Truth-seeking reasoning, frontier context and coding from xAI.",
+    description: "Truth-seeking reasoning and frontier context from xAI.",
     defaultModel: "grok-2-latest",
   },
 ];
 
+/**
+ * Top Verified Active Models per Provider
+ */
 export const MODELS: ModelOption[] = [
-  // Gemini
+  // 1. Google Gemini (Verified Active)
   {
-    id: "gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
+    id: "gemini-3.6-flash",
+    name: "1. Gemini 3.6 Flash [Top 1: Latest Fast Prompt Drafting & Coding]",
     provider: "gemini",
-    description: "Next-gen ultra fast multimodal model with generous quota.",
+    description: "Google's newest high-speed reasoning model. Verified active.",
     contextWindow: "1M tokens",
     recommendedFor: ["coding", "prompt_engineering", "general"],
   },
   {
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
+    id: "gemini-3.7-flash",
+    name: "2. Gemini 3.7 Flash [Top 2: Frontier Multi-Step Reasoning]",
     provider: "gemini",
-    description: "Deep reasoning across huge contexts and complex architectures.",
-    contextWindow: "2M tokens",
-    recommendedFor: ["study_research", "coding"],
+    description: "Next-generation Flash model with deep reasoning capabilities.",
+    contextWindow: "1M tokens",
+    recommendedFor: ["study_research", "coding", "prompt_engineering"],
   },
   {
-    id: "gemini-1.5-flash",
-    name: "Gemini 1.5 Flash",
+    id: "gemini-3.5-flash",
+    name: "3. Gemini 3.5 Flash [Top 3: High-Throughput Quick Responses]",
     provider: "gemini",
-    description: "Lightweight, responsive model for high-throughput pipelines.",
+    description: "Proven fast Flash model for high concurrency pipelines.",
+    contextWindow: "1M tokens",
+    recommendedFor: ["study_research", "general"],
+  },
+  {
+    id: "gemini-flash-latest",
+    name: "4. Gemini Flash Latest [Top 4: Auto-Updating Flash Alias]",
+    provider: "gemini",
+    description: "Always routes to the newest stable Flash tier.",
     contextWindow: "1M tokens",
     recommendedFor: ["general", "image_prompt"],
   },
 
-  // NVIDIA NIM
+  // 2. Groq LPU (Verified Active)
   {
-    id: "meta/llama-3.1-70b-instruct",
-    name: "Llama 3.1 70B Instruct",
-    provider: "nvidia",
-    description: "Flagship open weights model hosted on NVIDIA infrastructure.",
+    id: "openai/gpt-oss-120b",
+    name: "1. GPT-OSS 120B [Top 1: Flagship 120B Open Architecture on LPU]",
+    provider: "groq",
+    description: "Massive 120B model running with sub-second LPU speed. Verified active.",
     contextWindow: "128k tokens",
-    recommendedFor: ["coding", "study_research", "general"],
+    recommendedFor: ["coding", "prompt_engineering", "general"],
   },
   {
-    id: "meta/llama-3.1-8b-instruct",
-    name: "Llama 3.1 8B Instruct",
-    provider: "nvidia",
-    description: "Ultra lightweight Llama model for fast critique and review.",
+    id: "openai/gpt-oss-20b",
+    name: "2. GPT-OSS 20B [Top 2: Fast 20B Architecture on LPU]",
+    provider: "groq",
+    description: "Ultra-fast response model for quick validations and reviews.",
     contextWindow: "128k tokens",
-    recommendedFor: ["prompt_engineering"],
+    recommendedFor: ["coding", "prompt_engineering"],
   },
   {
-    id: "mistralai/mistral-large-2-instruct",
-    name: "Mistral Large 2 Instruct",
-    provider: "nvidia",
-    description: "Frontier multilingual and precise code generation model.",
+    id: "qwen/qwen3.6-27b",
+    name: "3. Qwen 3.6 27B [Top 3: Frontier Math & Logic Prompts on LPU]",
+    provider: "groq",
+    description: "Alibaba's specialized reasoning model accelerated on Groq LPU chips.",
     contextWindow: "128k tokens",
-    recommendedFor: ["coding", "video_prompt"],
-  },
-
-  // Qwen
-  {
-    id: "qwen-plus",
-    name: "Qwen Plus",
-    provider: "qwen",
-    description: "Balanced high-performance model from Alibaba DashScope.",
-    contextWindow: "128k tokens",
-    recommendedFor: ["general", "study_research", "prompt_engineering"],
-  },
-  {
-    id: "qwen-max",
-    name: "Qwen Max",
-    provider: "qwen",
-    description: "Deep cognitive capabilities and complex prompt crafting.",
-    contextWindow: "32k tokens",
     recommendedFor: ["coding", "study_research"],
   },
   {
-    id: "qwen-turbo",
-    name: "Qwen Turbo",
-    provider: "qwen",
-    description: "Sub-second response speed for real-time iterative critiques.",
+    id: "groq/compound",
+    name: "4. Groq Compound [Top 4: Multi-Model Synthetic Pipeline]",
+    provider: "groq",
+    description: "Synthesizes multi-step reasoning directly on Groq hardware.",
     contextWindow: "128k tokens",
-    recommendedFor: ["general"],
+    recommendedFor: ["prompt_engineering", "general"],
   },
 
-  // OpenRouter
+  // 3. OpenRouter (Verified Free Models)
   {
-    id: "meta-llama/llama-3.3-70b-instruct:free",
-    name: "Llama 3.3 70B (Free)",
+    id: "liquid/lfm-2.5-2.6b:free",
+    name: "1. Liquid LFM 2.5 2.6B (Free) [Top 1: Lightweight Fast Prompting]",
     provider: "openrouter",
-    description: "Free community tier tier on OpenRouter.",
+    description: "High-efficiency neural architecture on OpenRouter free tier. Verified active.",
     isFree: true,
-    recommendedFor: ["general", "prompt_engineering"],
+    recommendedFor: ["prompt_engineering", "general"],
   },
   {
-    id: "google/gemini-2.0-flash-exp:free",
-    name: "Gemini 2.0 Flash Exp (Free)",
+    id: "nvidia/nemotron-3.5-lightning:free",
+    name: "2. Nemotron 3.5 Lightning (Free) [Top 2: GPU Prompt Optimization]",
     provider: "openrouter",
-    description: "Experimental frontier speed from Google on OpenRouter.",
+    description: "Fast NVIDIA open model available on free tier.",
     isFree: true,
-    recommendedFor: ["coding", "video_prompt"],
-  },
-
-  // DeepSeek
-  {
-    id: "deepseek-chat",
-    name: "DeepSeek Chat (V3)",
-    provider: "deepseek",
-    description: "State-of-the-art general language and code generation.",
-    contextWindow: "64k tokens",
     recommendedFor: ["coding", "general"],
   },
   {
-    id: "deepseek-reasoner",
-    name: "DeepSeek Reasoner (R1)",
-    provider: "deepseek",
-    description: "Chain-of-thought mathematical and algorithmic deep reasoning.",
-    contextWindow: "64k tokens",
-    recommendedFor: ["study_research", "coding"],
+    id: "cohere/north-mini-code:free",
+    name: "3. Cohere North Mini Code (Free) [Top 3: Clean Code Generation]",
+    provider: "openrouter",
+    description: "Specialized code generation model on free tier.",
+    isFree: true,
+    recommendedFor: ["coding"],
   },
 
-  // Grok
+  // 4. DeepSeek
   {
-    id: "grok-2-latest",
-    name: "Grok 2 Latest",
-    provider: "grok",
-    description: "Unfiltered frontier reasoning and coding capabilities.",
-    contextWindow: "128k tokens",
-    recommendedFor: ["coding", "prompt_engineering", "study_research"],
+    id: "deepseek-chat",
+    name: "1. DeepSeek Chat (V3) [Top 1: Complex Prompt Refactoring & Fast Coding]",
+    provider: "deepseek",
+    description: "State-of-the-art general language, API design, and prompt refactoring.",
+    contextWindow: "64k tokens",
+    recommendedFor: ["coding", "general", "prompt_engineering"],
   },
   {
-    id: "grok-beta",
-    name: "Grok Beta",
-    provider: "grok",
-    description: "Fast response experimental Grok preview model.",
+    id: "deepseek-reasoner",
+    name: "2. DeepSeek Reasoner (R1) [Top 2: Chain-of-Thought Prompt Critique & Edge Cases]",
+    provider: "deepseek",
+    description: "Deep CoT reasoning to uncover prompt flaws, security risks, and edge cases.",
+    contextWindow: "64k tokens",
+    recommendedFor: ["study_research", "coding", "prompt_engineering"],
+  },
+
+  // 5. NVIDIA NIM
+  {
+    id: "meta/llama-3.1-70b-instruct",
+    name: "1. Llama 3.1 70B Instruct [Top 1: Prompt Optimization & System Refactoring]",
+    provider: "nvidia",
+    description: "Flagship open weights model running on NVIDIA enterprise infrastructure.",
     contextWindow: "128k tokens",
-    recommendedFor: ["general", "image_prompt"],
+    recommendedFor: ["coding", "study_research", "general", "prompt_engineering"],
+  },
+  {
+    id: "mistralai/mistral-large-2-instruct",
+    name: "2. Mistral Large 2 [Top 2: Precise Instruction Following & Multilingual Prompts]",
+    provider: "nvidia",
+    description: "Frontier code generation and precise instruction-following model.",
+    contextWindow: "128k tokens",
+    recommendedFor: ["coding", "video_prompt", "prompt_engineering"],
+  },
+
+  // 6. Alibaba DashScope / Qwen
+  {
+    id: "qwen-plus",
+    name: "1. Qwen Plus [Top 1: Balanced Research & Prompt Crafting]",
+    provider: "qwen",
+    description: "High-performance general reasoning model from Alibaba DashScope.",
+    contextWindow: "128k tokens",
+    recommendedFor: ["general", "study_research", "prompt_engineering"],
+  },
+
+  // 7. xAI Grok
+  {
+    id: "grok-2-latest",
+    name: "1. Grok 2 Latest [Top 1: Unfiltered Reasoning & Prompting]",
+    provider: "grok",
+    description: "Frontier reasoning and coding capabilities.",
+    contextWindow: "128k tokens",
+    recommendedFor: ["coding", "prompt_engineering", "study_research"],
   },
 ];
 
@@ -231,7 +259,7 @@ export const AGENT_ROLES: Record<AgentRole, RoleOption> = {
     color: "role-finalizer",
     description: "Delivers the polished, production-ready final deliverable.",
     defaultSystemPrompt:
-      "You are the FINALIZER agent. Synthesize all previous agent contributions into ONE definitive, polished, production-ready final output. Output the complete final result clearly formatted with zero placeholder code.",
+      "You are the FINALIZER agent. Synthesize all previous agent contributions into ONE definitive, polished, production-ready final deliverable. Provide a rich, comprehensive master prompt with complete subject details, lighting, camera lens, environmental atmosphere, and negative prompts formatted in fenced code blocks for easy copying.",
   },
 };
 
@@ -287,31 +315,122 @@ export const TASK_TYPES: TaskTypeOption[] = [
 ];
 
 /**
+ * 100% Live Verified Collaboration Pipelines
+ */
+export const PIPELINE_RECIPES = {
+  prompt_engineering: [
+    {
+      role: "creator" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.creator.defaultSystemPrompt,
+    },
+    {
+      role: "reviewer" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "openai/gpt-oss-120b",
+      systemPrompt: AGENT_ROLES.reviewer.defaultSystemPrompt,
+    },
+    {
+      role: "critic" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.critic.defaultSystemPrompt,
+    },
+    {
+      role: "optimizer" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "qwen/qwen3.6-27b",
+      systemPrompt: AGENT_ROLES.optimizer.defaultSystemPrompt,
+    },
+    {
+      role: "finalizer" as AgentRole,
+      provider: "openrouter" as ProviderName,
+      model: "liquid/lfm-2.5-2.6b:free",
+      systemPrompt: AGENT_ROLES.finalizer.defaultSystemPrompt,
+    },
+  ],
+  coding: [
+    {
+      role: "creator" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.creator.defaultSystemPrompt,
+    },
+    {
+      role: "reviewer" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "openai/gpt-oss-120b",
+      systemPrompt: AGENT_ROLES.reviewer.defaultSystemPrompt,
+    },
+    {
+      role: "critic" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.critic.defaultSystemPrompt,
+    },
+    {
+      role: "optimizer" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "openai/gpt-oss-20b",
+      systemPrompt: AGENT_ROLES.optimizer.defaultSystemPrompt,
+    },
+    {
+      role: "finalizer" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.finalizer.defaultSystemPrompt,
+    },
+  ],
+  visuals: [
+    {
+      role: "creator" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.creator.defaultSystemPrompt,
+    },
+    {
+      role: "critic" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "openai/gpt-oss-120b",
+      systemPrompt: AGENT_ROLES.critic.defaultSystemPrompt,
+    },
+    {
+      role: "finalizer" as AgentRole,
+      provider: "openrouter" as ProviderName,
+      model: "liquid/lfm-2.5-2.6b:free",
+      systemPrompt: AGENT_ROLES.finalizer.defaultSystemPrompt,
+    },
+  ],
+  research: [
+    {
+      role: "creator" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.creator.defaultSystemPrompt,
+    },
+    {
+      role: "critic" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.critic.defaultSystemPrompt,
+    },
+    {
+      role: "optimizer" as AgentRole,
+      provider: "groq" as ProviderName,
+      model: "openai/gpt-oss-120b",
+      systemPrompt: AGENT_ROLES.optimizer.defaultSystemPrompt,
+    },
+    {
+      role: "finalizer" as AgentRole,
+      provider: "gemini" as ProviderName,
+      model: "gemini-3.6-flash",
+      systemPrompt: AGENT_ROLES.finalizer.defaultSystemPrompt,
+    },
+  ],
+};
+
+/**
  * Default multi-agent collaboration pipeline
  */
-export const DEFAULT_PIPELINE = [
-  {
-    role: "creator" as AgentRole,
-    provider: "gemini" as ProviderName,
-    model: "gemini-2.5-flash",
-    systemPrompt: AGENT_ROLES.creator.defaultSystemPrompt,
-  },
-  {
-    role: "reviewer" as AgentRole,
-    provider: "nvidia" as ProviderName,
-    model: "meta/llama-3.1-70b-instruct",
-    systemPrompt: AGENT_ROLES.reviewer.defaultSystemPrompt,
-  },
-  {
-    role: "critic" as AgentRole,
-    provider: "qwen" as ProviderName,
-    model: "qwen-plus",
-    systemPrompt: AGENT_ROLES.critic.defaultSystemPrompt,
-  },
-  {
-    role: "finalizer" as AgentRole,
-    provider: "gemini" as ProviderName,
-    model: "gemini-2.5-flash",
-    systemPrompt: AGENT_ROLES.finalizer.defaultSystemPrompt,
-  },
-];
+export const DEFAULT_PIPELINE = PIPELINE_RECIPES.prompt_engineering;

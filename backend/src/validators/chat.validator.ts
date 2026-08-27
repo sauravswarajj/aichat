@@ -10,7 +10,7 @@
 
 import { z } from "zod";
 
-const providerNameSchema = z.enum(["gemini", "nvidia", "qwen", "openrouter", "deepseek", "grok"]);
+const providerNameSchema = z.enum(["gemini", "nvidia", "qwen", "openrouter", "deepseek", "grok", "groq"]);
 
 const agentRoleSchema = z.enum(["creator", "reviewer", "critic", "optimizer", "finalizer"]);
 
@@ -36,6 +36,8 @@ export const workflowRequestSchema = z.object({
   task: z.string().min(1, "task is required"),
   taskType: taskTypeSchema,
   agents: z.array(agentConfigSchema).min(1, "at least one agent is required"),
+  image: z.string().optional(),
+  images: z.array(z.string()).optional(),
   /** Optional — continue an existing thread. Omit to auto-create a new one. */
   threadId: z.string().min(1).optional(),
 });

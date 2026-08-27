@@ -31,9 +31,10 @@ function CodeBlock({ children, className, ...props }: any) {
   const isInline = !match && !codeString.includes("\n");
 
   if (isInline) {
+    // If it's a longer prompt or token, ensure it wraps cleanly across lines with break-words
     return (
       <code
-        className="px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-mono text-[#adc6ff] font-medium"
+        className="px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs font-mono text-[#adc6ff] font-medium break-words whitespace-pre-wrap [word-break:break-word] inline-block max-w-full my-0.5 align-middle"
         {...props}
       >
         {children}
@@ -42,16 +43,16 @@ function CodeBlock({ children, className, ...props }: any) {
   }
 
   return (
-    <div className="relative group my-3 rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[#0b0e15] shadow-sm">
-      {/* Code Header Bar from Stitch */}
+    <div className="relative group my-3 rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-[#0b0e15] shadow-sm max-w-full">
+      {/* Code Header Bar */}
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-mono">
         <div className="flex items-center gap-1.5">
           <FileCode className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          <span>{lang ? `snippet.${lang}` : "code"}</span>
+          <span>{lang ? `snippet.${lang}` : "prompt / code"}</span>
         </div>
         <button
           onClick={handleCopy}
-          className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-0.5 rounded hover:bg-white/10 transition-colors"
+          className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] px-2 py-0.5 rounded hover:bg-white/10 transition-colors active:scale-95"
           title="Copy code"
         >
           {copied ? (
@@ -68,10 +69,10 @@ function CodeBlock({ children, className, ...props }: any) {
         </button>
       </div>
 
-      {/* Code Body */}
+      {/* Code Body with Auto Multi-Line Text Wrapping */}
       <div className="p-3.5 overflow-x-auto">
-        <pre className="font-mono text-xs leading-relaxed">
-          <code className={className} {...props}>
+        <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap break-words [word-break:break-word]">
+          <code className={cn(className, "whitespace-pre-wrap break-words [word-break:break-word]")} {...props}>
             {children}
           </code>
         </pre>
@@ -84,7 +85,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   return (
     <div
       className={cn(
-        "prose prose-sm dark:prose-invert max-w-none text-[var(--text-primary)] leading-relaxed space-y-3 font-sans text-sm",
+        "prose prose-sm dark:prose-invert max-w-none text-[var(--text-primary)] leading-relaxed space-y-3 font-sans text-sm break-words [word-break:break-word]",
         className
       )}
     >
@@ -95,14 +96,14 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           code: CodeBlock,
           a: ({ node, ...props }) => (
             <a
-              className="text-[#adc6ff] hover:text-[#d8e2ff] underline underline-offset-2 transition-colors"
+              className="text-[#adc6ff] hover:text-[#d8e2ff] underline underline-offset-2 transition-colors break-words"
               target="_blank"
               rel="noopener noreferrer"
               {...props}
             />
           ),
           table: ({ node, ...props }) => (
-            <div className="overflow-x-auto my-3 rounded-lg border border-[var(--border-subtle)]">
+            <div className="overflow-x-auto my-3 rounded-lg border border-[var(--border-subtle)] max-w-full">
               <table className="w-full text-left text-xs border-collapse font-mono" {...props} />
             </div>
           ),
@@ -120,9 +121,10 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           ),
           ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1 text-xs" {...props} />,
           ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1 text-xs" {...props} />,
+          p: ({ node, ...props }) => <p className="break-words [word-break:break-word]" {...props} />,
           blockquote: ({ node, ...props }) => (
             <blockquote
-              className="border-l-2 border-[#adc6ff] pl-3.5 italic text-[var(--text-secondary)] my-2"
+              className="border-l-2 border-[#adc6ff] pl-3.5 italic text-[var(--text-secondary)] my-2 break-words"
               {...props}
             />
           ),

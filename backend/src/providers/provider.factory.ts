@@ -22,6 +22,7 @@ import { qwenProvider } from "./qwen.provider";
 import { openrouterProvider } from "./openrouter.provider";
 import { deepseekProvider } from "./deepseek.provider";
 import { grokProvider } from "./grok.provider";
+import { groqProvider } from "./groq.provider";
 
 const providerRegistry: Record<ProviderName, AIProvider> = {
   gemini: geminiProvider,
@@ -30,6 +31,7 @@ const providerRegistry: Record<ProviderName, AIProvider> = {
   openrouter: openrouterProvider,
   deepseek: deepseekProvider,
   grok: grokProvider,
+  groq: groqProvider,
 };
 
 export function getProvider(name: ProviderName): AIProvider {

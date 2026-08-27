@@ -1,13 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Trash2, SlidersHorizontal, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  SlidersHorizontal,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
+  Sparkles,
+  Code2,
+  Image as ImageIcon,
+  Check,
+  Zap,
+} from "lucide-react";
 import { AgentConfig, AgentRole, ProviderName } from "@/types/api.types";
-import { AGENT_ROLES, DEFAULT_PIPELINE, MODELS, PROVIDERS } from "@/lib/constants";
+import { AGENT_ROLES, DEFAULT_PIPELINE, MODELS, PIPELINE_RECIPES, PROVIDERS } from "@/lib/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { cn } from "@/lib/utils";
 
 interface PipelineConfiguratorProps {
   agents: AgentConfig[];
@@ -16,6 +28,7 @@ interface PipelineConfiguratorProps {
 
 export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [editingPromptAgentIdx, setEditingPromptAgentIdx] = useState<number | null>(null);
   const [tempPrompt, setTempPrompt] = useState("");
 
@@ -63,6 +76,11 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
     onChange(DEFAULT_PIPELINE);
   };
 
+  const handleApplyRecipe = (recipeKey: keyof typeof PIPELINE_RECIPES) => {
+    onChange(PIPELINE_RECIPES[recipeKey]);
+    setIsGuideOpen(false);
+  };
+
   const openPromptEditor = (index: number) => {
     setEditingPromptAgentIdx(index);
     setTempPrompt(agents[index].systemPrompt);
@@ -78,7 +96,7 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
   return (
     <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-4 shadow-sm space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
           <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] font-mono">
@@ -86,7 +104,18 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Guide & Recommended Chains Button */}
+          <button
+            type="button"
+            onClick={() => setIsGuideOpen(true)}
+            className="text-[11px] text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 flex items-center gap-1.5 transition-colors px-2.5 py-1 rounded-md font-medium"
+            title="View Recommended Chains and Guidelines"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Guide & Recipes</span>
+          </button>
+
           <button
             type="button"
             onClick={handleResetDefaults}
@@ -94,7 +123,7 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
             title="Reset to default multi-agent pipeline"
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Reset Defaults</span>
+            <span>Reset</span>
           </button>
 
           <button
@@ -122,7 +151,7 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
                   {roleMeta?.label || agent.role}
                 </Badge>
                 <span className="text-[var(--text-secondary)] font-mono text-[11px]">
-                  {agent.provider}/{agent.model.split("/").pop()}
+                  {agent.provider}/{agent.model.split("/").pop()?.replace(/:free/, "")}
                 </span>
                 {i < agents.length - 1 && <span className="text-[var(--text-muted)] ml-1">→</span>}
               </div>
@@ -188,7 +217,7 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
                       {availableModels.length > 0 ? (
                         availableModels.map((m) => (
                           <option key={m.id} value={m.id}>
-                            {m.name} {m.isFree ? "(Free)" : ""}
+                            {m.name}
                           </option>
                         ))
                       ) : (
@@ -239,6 +268,180 @@ export function PipelineConfigurator({ agents, onChange }: PipelineConfiguratorP
           )}
         </div>
       )}
+
+      {/* Guide & Recommended Recipes Modal */}
+      <Modal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        title="AI Pipeline Guide & Recommended Sequences"
+        description="Proven multi-agent combinations tailored for Prompting, Coding, Visuals, and Research."
+        maxWidth="xl"
+      >
+        <div className="space-y-6 mt-3 max-h-[75vh] overflow-y-auto pr-1">
+          {/* 1. The Core Rule */}
+          <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-1.5">
+            <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Golden Rule of Multi-Agent Sequences
+            </h4>
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              Always follow the sequence: <strong>Creator (1st)</strong> ➔ <strong>Reviewer (2nd)</strong> ➔ <strong>Critic (3rd)</strong> ➔ <strong>Optimizer (4th)</strong> ➔ <strong>Finalizer (Last)</strong>. The Finalizer must always be the final step to synthesize all previous critiques into a clean final deliverable.
+            </p>
+          </div>
+
+          {/* 2. One-Click Apply Recipes */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-[var(--text-muted)]">
+              Instant Pre-Built Recipes (Click to Apply)
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Prompt Engineering Recipe */}
+              <div className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-amber-500/30 space-y-3 flex flex-col justify-between hover:border-amber-500/50 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Prompt Engineering (5 Models)
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">
+                      Recommended
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)]">
+                    Gemini (Draft) ➔ Groq (Check) ➔ DeepSeek R1 (Logic) ➔ NVIDIA (Refactor) ➔ OpenRouter Qwen3 (Finalize).
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleApplyRecipe("prompt_engineering")}
+                  className="w-full text-xs bg-amber-600 hover:bg-amber-500 text-white"
+                  rightIcon={<Check className="w-3 h-3" />}
+                >
+                  Apply Prompting Chain
+                </Button>
+              </div>
+
+              {/* Coding Recipe */}
+              <div className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-indigo-500/30 space-y-3 flex flex-col justify-between hover:border-indigo-500/50 transition-colors">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                      <Code2 className="w-3.5 h-3.5" />
+                      Software & Coding (5 Models)
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300">
+                      Full-Stack
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)]">
+                    Gemini 2.5 (Code) ➔ Groq Llama 3.3 (Bugs) ➔ DeepSeek R1 (Critic) ➔ DeepSeek V3 (Optimize) ➔ NVIDIA (Final).
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleApplyRecipe("coding")}
+                  className="w-full text-xs bg-indigo-600 hover:bg-indigo-500 text-white"
+                  rightIcon={<Check className="w-3 h-3" />}
+                >
+                  Apply Coding Chain
+                </Button>
+              </div>
+
+              {/* Visuals & Prompting */}
+              <div className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Visuals & Image Prompts (3 Models)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)]">
+                    Gemini 2.5 (Draft) ➔ Groq Llama 3.3 (Lighting & Lens Critique) ➔ OpenRouter Qwen3 (Final Prompt).
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleApplyRecipe("visuals")}
+                  className="w-full text-xs"
+                >
+                  Apply Visuals Chain
+                </Button>
+              </div>
+
+              {/* Deep Research */}
+              <div className="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Deep Research & Analysis (4 Models)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)]">
+                    Gemini 2.5 Pro (Massive Context) ➔ DeepSeek R1 (Deep Logic) ➔ NVIDIA 70B (Structure) ➔ Gemini (Final).
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleApplyRecipe("research")}
+                  className="w-full text-xs"
+                >
+                  Apply Research Chain
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Detailed Model Roles Cheatsheet */}
+          <div className="space-y-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-[var(--text-muted)]">
+              Model Role Cheatsheet
+            </h4>
+            <div className="space-y-2 text-xs">
+              <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                <Badge variant="role" role="creator" size="sm">Creator</Badge>
+                <div className="text-[11px] text-[var(--text-secondary)]">
+                  <strong>Best:</strong> Google Gemini 2.5 Flash. Ultra-fast initial drafts, comprehensive structure, and zero hallucinations on initial structure.
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                <Badge variant="role" role="reviewer" size="sm">Reviewer</Badge>
+                <div className="text-[11px] text-[var(--text-secondary)]">
+                  <strong>Best:</strong> Groq LPU (Llama 3.3 70B). Sub-second inference for catching syntax bugs, missing edge cases, and prompt logic issues.
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                <Badge variant="role" role="critic" size="sm">Critic</Badge>
+                <div className="text-[11px] text-[var(--text-secondary)]">
+                  <strong>Best:</strong> DeepSeek Reasoner (R1). Chain-of-thought mathematical and algorithmic analysis to uncover deep failure modes and security gaps.
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                <Badge variant="role" role="optimizer" size="sm">Optimizer</Badge>
+                <div className="text-[11px] text-[var(--text-secondary)]">
+                  <strong>Best:</strong> NVIDIA NIM (Llama 3.1 70B) or DeepSeek Chat (V3). Refactors and enhances the output by applying all previous critiques.
+                </div>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                <Badge variant="role" role="finalizer" size="sm">Finalizer</Badge>
+                <div className="text-[11px] text-[var(--text-secondary)]">
+                  <strong>Best:</strong> OpenRouter Qwen3 235B or Gemini 2.5 Flash. Produces the single definitive, production-ready deliverable.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* System Prompt Modal */}
       <Modal

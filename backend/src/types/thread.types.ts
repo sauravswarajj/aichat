@@ -5,9 +5,6 @@
  * sidebar. Each time the user sends a task in an existing thread, that
  * produces one "Turn" — the task they sent plus everything the agent chain
  * produced for it. A thread is just an ordered list of turns.
- *
- * This is what /api/threads (list, for the sidebar) and /api/threads/:id
- * (one full thread, to reopen and continue) are built on.
  * -----------------------------------------------------------------------------
  */
 
@@ -22,6 +19,7 @@ export interface ThreadTurn {
   agents: AgentConfig[];
   messages: AgentMessage[];
   finalResult: string;
+  image?: string;
   createdAt: string;
 }
 

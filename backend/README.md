@@ -3,7 +3,7 @@
 Node.js + Express + TypeScript backend for the personal multi-AI collaboration
 workspace. Runs a task through a chain of configurable AI agents (Creator →
 Reviewer → Critic → Finalizer, etc.), each backed by a provider you choose
-(Gemini / NVIDIA NIM / Qwen / OpenRouter / DeepSeek / Grok), streams progress
+(Gemini / NVIDIA NIM / Qwen / OpenRouter / DeepSeek / Grok / Groq), streams progress
 to the frontend in real time over SSE, and saves every conversation as a
 thread — just like Claude's own chat sidebar — backed by MongoDB Atlas so
 nothing is lost on restart or redeploy.
@@ -64,7 +64,9 @@ src/
 │   ├── qwen.provider.ts       Alibaba DashScope/Qwen adapter (OpenAI-compatible, INTL endpoint).
 │   ├── openrouter.provider.ts OpenRouter adapter.
 │   ├── deepseek.provider.ts   DeepSeek adapter (OpenAI-compatible). One-time 5M free tokens on sign-up.
-│   ├── grok.provider.ts       xAI Grok adapter (OpenAI-compatible). $25 one-time trial credit on sign-up.
+│   ├── grok.provider.ts       xAI Grok adapter (OpenAI-compatible). Currently has no real free tier.
+│   ├── groq.provider.ts       Groq (GroqCloud) adapter — NOT xAI's Grok. Hosts Llama/Qwen/Mixtral/Kimi
+│   │                          at very high speed. Generous free tier, no card needed.
 │   └── provider.factory.ts    Maps a provider name string -> the matching adapter.
 │                               ADD NEW PROVIDERS HERE — this is the one file to edit.
 │
@@ -232,11 +234,14 @@ dropdown just needs to send the matching string per agent, no backend changes
 needed:
 
 ```json
-{ "role": "creator", "provider": "grok", "model": "grok-4", "systemPrompt": "..." }
+{ "role": "creator", "provider": "groq", "model": "llama-3.3-70b-versatile", "systemPrompt": "..." }
 ```
 
 Valid `provider` values right now: `"gemini"`, `"nvidia"`, `"qwen"`,
-`"openrouter"`, `"deepseek"`, `"grok"`. Each agent in the `agents` array can
+`"openrouter"`, `"deepseek"`, `"grok"`, `"groq"`. Note: `"grok"` is xAI's
+Grok (currently no free tier — needs a paid key to actually work) and
+`"groq"` is the separate GroqCloud service (free, and likely what you
+actually want unless you're specifically paying for xAI). Each agent in the `agents` array can
 use a different provider — that's the whole point of the per-agent config.
 The only requirement is that the matching API key is set in `.env` on the
 backend; if it's missing, that agent's step fails with a clear

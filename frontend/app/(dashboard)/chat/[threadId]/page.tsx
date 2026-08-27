@@ -2,18 +2,24 @@
 
 import React, { useState, use, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Send, User, Bot, Sparkles, MessageSquare, AlertCircle, ArrowLeft, RotateCcw } from "lucide-react";
+import {
+  Send,
+  User,
+  Sparkles,
+  MessageSquare,
+  AlertCircle,
+  ImagePlus,
+  X,
+} from "lucide-react";
 import { useThreadQuery } from "@/hooks/useThreads";
 import { useChatStream } from "@/hooks/useChatStream";
 import { DEFAULT_PIPELINE } from "@/lib/constants";
 import { AgentTimeline } from "@/features/chat/AgentTimeline";
 import { AgentMessageCard } from "@/features/chat/AgentMessageCard";
 import { FinalResultCard } from "@/features/chat/FinalResultCard";
-import { PipelineConfigurator } from "@/features/agents/PipelineConfigurator";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Badge } from "@/components/ui/Badge";
-import { formatDate, formatTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { AgentConfig, TaskType } from "@/types/api.types";
 
 interface ChatThreadPageProps {
@@ -23,12 +29,15 @@ interface ChatThreadPageProps {
 export default function ChatThreadPage({ params }: ChatThreadPageProps) {
   const { threadId } = use(params);
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: thread, isLoading, isError, error: fetchError, refetch } = useThreadQuery(threadId);
 
   const [followUpPrompt, setFollowUpPrompt] = useState("");
   const [taskType, setTaskType] = useState<TaskType>("coding");
   const [pipelineAgents, setPipelineAgents] = useState<AgentConfig[]>(DEFAULT_PIPELINE);
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [imageFileName, setImageFileName] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,17 +59,39 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
     }
   }, [thread?.turns, liveMessages, liveFinalResult]);
 
+  const handleImageFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image size must be under 10MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setAttachedImage(e.target?.result as string);
+      setImageFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSendFollowUp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!followUpPrompt.trim() || isStreaming) return;
 
     const taskText = followUpPrompt.trim();
+    const imageToSend = attachedImage;
     setFollowUpPrompt("");
+    setAttachedImage(null);
+    setImageFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
 
     await startWorkflow({
       task: taskText,
       taskType: taskType,
       agents: pipelineAgents,
+      image: imageToSend || undefined,
       threadId: threadId,
     });
 
@@ -136,6 +167,23 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
               <p className="text-xs sm:text-sm text-[var(--text-primary)] font-mono whitespace-pre-wrap pl-8">
                 {turn.task}
               </p>
+
+              {/* Render Image Thumbnail if attached in this turn */}
+              {turn.image && (
+                <div className="pl-8 pt-2">
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] w-fit">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={turn.image}
+                      alt="Reference Photo"
+                      className="w-14 h-14 object-cover rounded-md border border-[var(--border-subtle)] shadow-sm"
+                    />
+                    <span className="text-xs text-[var(--text-secondary)] font-mono">
+                      Reference Photo
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Agent Messages */}
@@ -197,8 +245,55 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
 
       {/* Sticky Bottom Input Bar */}
       <div className="border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)]/90 backdrop-blur-md p-4 shrink-0">
-        <form onSubmit={handleSendFollowUp} className="max-w-4xl mx-auto space-y-3">
-          <div className="relative">
+        <form onSubmit={handleSendFollowUp} className="max-w-4xl mx-auto space-y-2">
+          {/* Image Preview if attached */}
+          {attachedImage && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--bg-elevated)] border border-indigo-500/30 animate-in fade-in">
+              <div className="flex items-center gap-2 min-w-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={attachedImage}
+                  alt="Attachment"
+                  className="w-10 h-10 object-cover rounded border border-[var(--border-subtle)]"
+                />
+                <span className="text-xs text-[var(--text-primary)] truncate">
+                  {imageFileName || "Attached Image"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAttachedImage(null);
+                  setImageFileName(null);
+                }}
+                className="p-1 text-[var(--text-muted)] hover:text-rose-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="relative flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageFile(file);
+              }}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-indigo-400 hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] transition-colors shrink-0"
+              title="Attach Reference Image"
+            >
+              <ImagePlus className="w-4 h-4" />
+            </button>
+
             <textarea
               rows={2}
               value={followUpPrompt}
@@ -209,8 +304,8 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
                   handleSendFollowUp();
                 }
               }}
-              placeholder="Continue conversation with earlier context (e.g. 'Now add error handling to the code above')..."
-              className="w-full rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-3 pr-24 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed resize-none"
+              placeholder="Continue conversation with earlier context or attached image..."
+              className="flex-1 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-3 pr-20 text-xs sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed resize-none"
               disabled={isStreaming}
             />
 
@@ -219,7 +314,7 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
               variant="primary"
               size="sm"
               disabled={!followUpPrompt.trim() || isStreaming}
-              className="absolute right-2.5 bottom-3 shadow-md shadow-indigo-500/20 text-xs px-3"
+              className="absolute right-2 bottom-2.5 shadow-md shadow-indigo-500/20 text-xs px-3"
               rightIcon={<Send className="w-3.5 h-3.5" />}
             >
               Send
@@ -227,7 +322,7 @@ export default function ChatThreadPage({ params }: ChatThreadPageProps) {
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)]">
-            <span>Agents will receive prior conversation turns as context.</span>
+            <span>Agents will receive prior conversation turns & images as context.</span>
             <span>Ctrl+Enter to submit</span>
           </div>
         </form>

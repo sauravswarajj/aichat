@@ -11,7 +11,8 @@ export type ProviderName =
   | "qwen"
   | "openrouter"
   | "deepseek"
-  | "grok";
+  | "grok"
+  | "groq";
 
 export type AgentRole =
   | "creator"
@@ -56,6 +57,7 @@ export interface WorkflowState {
   round: number;
   status: WorkflowStatus;
   finalResult?: string;
+  image?: string;
   error?: string;
 }
 
@@ -63,6 +65,8 @@ export interface WorkflowRequest {
   task: string;
   taskType: TaskType;
   agents: AgentConfig[];
+  image?: string;
+  images?: string[];
   threadId?: string;
 }
 
@@ -89,6 +93,7 @@ export interface ThreadTurn {
   agents: AgentConfig[];
   messages: AgentMessage[];
   finalResult: string;
+  image?: string;
   createdAt: string;
 }
 

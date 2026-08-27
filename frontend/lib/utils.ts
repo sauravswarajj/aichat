@@ -13,16 +13,17 @@ export function cn(...inputs: ClassValue[]) {
  * - "Older"
  */
 export function getThreadTimeGroup(dateString: string): "today" | "yesterday" | "previous7Days" | "older" {
+  if (!dateString) return "today";
   const date = new Date(dateString);
-  const now = new Date();
+  if (isNaN(date.getTime())) return "today";
 
-  // Strip time for day comparison
+  const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const threadDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   const diffDays = Math.round((today.getTime() - threadDay.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "today";
+  if (diffDays <= 0) return "today";
   if (diffDays === 1) return "yesterday";
   if (diffDays <= 7) return "previous7Days";
   return "older";

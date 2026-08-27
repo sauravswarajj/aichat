@@ -2,24 +2,11 @@
  * controllers/chat.controller.ts
  * -----------------------------------------------------------------------------
  * Two ways to run a workflow, both calling the SAME orchestrator, and both
- * now thread-aware:
+ * now thread-aware and vision-aware:
  *
  *  - runWorkflowJSON  -> POST /api/chat        Simple request/response.
  *  - runWorkflowSSE   -> POST /api/chat/stream Real-time streaming, for the
  *                        frontend's live "AI conversation" view.
- *
- * THREAD BEHAVIOR (both endpoints):
- *  - If the request includes `threadId`, that thread's prior turns are
- *    loaded and fed to every agent as context (buildThreadHistory) — so if
- *    the user says something like "check the earlier data in this thread",
- *    the agents actually have it.
- *  - If `threadId` is omitted, a new thread is auto-created for this run.
- *  - Either way, once the run completes successfully, the turn (task +
- *    agent messages + final result) is saved onto the thread, and the
- *    thread's id is included in the response — the JSON response body for
- *    the plain endpoint, and a "thread_info" SSE event (sent first, before
- *    any agent events) for the streaming endpoint, so the frontend always
- *    knows which thread it's in, even for a brand-new chat.
  * -----------------------------------------------------------------------------
  */
 
@@ -47,6 +34,7 @@ export async function runWorkflowJSON(req: Request, res: Response) {
     agents: workflowRequest.agents,
     messages: result.messages,
     finalResult: result.finalResult ?? "",
+    image: workflowRequest.image,
     createdAt: new Date().toISOString(),
   });
 
@@ -88,6 +76,7 @@ export async function runWorkflowSSE(req: Request, res: Response) {
       agents: workflowRequest.agents,
       messages: result.messages,
       finalResult: result.finalResult ?? "",
+      image: workflowRequest.image,
       createdAt: new Date().toISOString(),
     });
   } catch (err) {

@@ -1,7 +1,7 @@
 /**
- * providers/openrouter.provider.ts
+ * providers/groq.provider.ts
  * -----------------------------------------------------------------------------
- * Adapter for OpenRouter (https://openrouter.ai).
+ * Adapter for GroqCloud (https://console.groq.com).
  * -----------------------------------------------------------------------------
  */
 
@@ -11,16 +11,17 @@ import { withRetry } from "../utils/retry";
 import { httpClient, normalizeProviderError } from "./base.provider";
 import { AIProvider, ProviderRequest, ProviderResponse } from "../types/provider.types";
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
+const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-export const openrouterProvider: AIProvider = {
-  name: "openrouter",
+export const groqProvider: AIProvider = {
+  name: "groq",
 
   async sendMessage(request: ProviderRequest): Promise<ProviderResponse> {
-    if (!env.OPENROUTER_API_KEY) {
-      throw new AppError("OPENROUTER_API_KEY is not set in .env", 500);
+    if (!env.GROQ_API_KEY) {
+      throw new AppError("GROQ_API_KEY is not set in .env", 500);
     }
 
+    // Strip provider-agnostic custom properties (like images) for standard OpenAI-compatible text endpoint
     const cleanMessages = request.messages.map((m) => ({
       role: m.role,
       content: m.content,
@@ -28,7 +29,7 @@ export const openrouterProvider: AIProvider = {
 
     const call = () =>
       httpClient.post(
-        OPENROUTER_BASE_URL,
+        GROQ_BASE_URL,
         {
           model: request.model,
           messages: cleanMessages,
@@ -38,9 +39,7 @@ export const openrouterProvider: AIProvider = {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-            "HTTP-Referer": "http://localhost",
-            "X-Title": "Jaishwal AI",
+            Authorization: `Bearer ${env.GROQ_API_KEY}`,
           },
           timeout: env.PROVIDER_TIMEOUT_MS,
         }
@@ -49,20 +48,17 @@ export const openrouterProvider: AIProvider = {
     try {
       const response = await withRetry(call, {
         retries: env.PROVIDER_MAX_RETRIES,
-        label: `openrouter:${request.model}`,
+        label: `groq:${request.model}`,
       });
 
       const content: string = response.data?.choices?.[0]?.message?.content ?? "";
 
       if (!content) {
-        throw new AppError(
-          "OpenRouter returned an empty response (the free model may be rate-limited or delisted)",
-          502
-        );
+        throw new AppError("Groq returned an empty response", 502);
       }
 
       return {
-        provider: "openrouter",
+        provider: "groq",
         model: request.model,
         content,
         usage: {
@@ -73,7 +69,7 @@ export const openrouterProvider: AIProvider = {
       };
     } catch (err) {
       if (err instanceof AppError) throw err;
-      throw normalizeProviderError(err, "openrouter");
+      throw normalizeProviderError(err, "groq");
     }
   },
 };

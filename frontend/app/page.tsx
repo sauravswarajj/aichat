@@ -29,7 +29,7 @@ export default function LandingPage() {
             <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
           </div>
           <span className="font-bold text-xs sm:text-sm tracking-tight text-white truncate">
-            Multi-AI Workspace
+            Jaishwal AI
           </span>
         </Link>
 

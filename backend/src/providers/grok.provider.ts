@@ -3,12 +3,6 @@
  * -----------------------------------------------------------------------------
  * Adapter for xAI's Grok API (https://docs.x.ai). OpenAI-compatible request/
  * response shape, so this mirrors nvidia.provider.ts.
- *
- * Free-tier note (checked Aug 2026): new accounts get $25 in one-time trial
- * credits on sign-up (no card required), typically expiring in 30-90 days.
- * xAI also offers an optional data-sharing program for extra monthly credits —
- * that trades away privacy on your prompts/responses, so leave it off for
- * anything you wouldn't want used as training data.
  * -----------------------------------------------------------------------------
  */
 
@@ -24,8 +18,9 @@ export const grokProvider: AIProvider = {
   name: "grok",
 
   async sendMessage(request: ProviderRequest): Promise<ProviderResponse> {
-    if (!env.XAI_API_KEY) {
-      throw new AppError("XAI_API_KEY is not set in .env", 500);
+    const apiKey = env.GROK_API_KEY || env.XAI_API_KEY;
+    if (!apiKey) {
+      throw new AppError("GROK_API_KEY / XAI_API_KEY is not set in .env", 500);
     }
 
     const call = () =>
@@ -40,7 +35,7 @@ export const grokProvider: AIProvider = {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${env.XAI_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           timeout: env.PROVIDER_TIMEOUT_MS,
         }

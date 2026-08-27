@@ -11,12 +11,19 @@
  */
 
 /** Every provider we support. Add a new value here when you add a new adapter. */
-export type ProviderName = "gemini" | "nvidia" | "qwen" | "openrouter" | "deepseek" | "grok";
+export type ProviderName = "gemini" | "nvidia" | "qwen" | "openrouter" | "deepseek" | "grok" | "groq";
 
-/** A single message in a conversation, in the universal OpenAI-style shape. */
+/** Image attachment for multimodal vision models. */
+export interface ImageAttachment {
+  mimeType: string;
+  data: string; // Base64 encoded data string without data:... prefix
+}
+
+/** A single message in a conversation, in the universal OpenAI/multimodal shape. */
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  images?: ImageAttachment[];
 }
 
 /** What the orchestrator passes INTO a provider adapter. */

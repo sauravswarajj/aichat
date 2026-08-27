@@ -2,11 +2,6 @@
  * providers/qwen.provider.ts
  * -----------------------------------------------------------------------------
  * Adapter for Alibaba Cloud Model Studio / DashScope (Qwen models).
- *
- * IMPORTANT: the free quota only applies on the INTERNATIONAL (Singapore)
- * endpoint used below (dashscope-intl.aliyuncs.com). The mainland/Virginia
- * endpoint does not carry the same free tier — do not switch this URL
- * without re-checking your account region.
  * -----------------------------------------------------------------------------
  */
 
@@ -22,8 +17,9 @@ export const qwenProvider: AIProvider = {
   name: "qwen",
 
   async sendMessage(request: ProviderRequest): Promise<ProviderResponse> {
-    if (!env.DASHSCOPE_API_KEY) {
-      throw new AppError("DASHSCOPE_API_KEY is not set in .env", 500);
+    const apiKey = env.DASHSCOPE_API_KEY || env.QWEN_API_KEY;
+    if (!apiKey) {
+      throw new AppError("DASHSCOPE_API_KEY / QWEN_API_KEY is not set in .env", 500);
     }
 
     const call = () =>
@@ -38,7 +34,7 @@ export const qwenProvider: AIProvider = {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${env.DASHSCOPE_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           timeout: env.PROVIDER_TIMEOUT_MS,
         }

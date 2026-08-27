@@ -42,6 +42,9 @@ export interface WorkflowRequest {
   task: string;
   taskType: TaskType;
   agents: AgentConfig[];
+  /** Optional base64 data URL for reference image analysis (e.g. data:image/png;base64,...) */
+  image?: string;
+  images?: string[];
   /**
    * Optional — send the id of an existing thread to continue that
    * conversation (prior turns are fed back to the agents as context).

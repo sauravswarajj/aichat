@@ -2,9 +2,6 @@
  * providers/nvidia.provider.ts
  * -----------------------------------------------------------------------------
  * Adapter for NVIDIA NIM / build.nvidia.com hosted models.
- *
- * NVIDIA's API is OpenAI-compatible, so this adapter is the simplest one —
- * our ChatMessage[] shape already matches what it expects almost 1:1.
  * -----------------------------------------------------------------------------
  */
 
@@ -24,12 +21,17 @@ export const nvidiaProvider: AIProvider = {
       throw new AppError("NVIDIA_API_KEY is not set in .env", 500);
     }
 
+    const cleanMessages = request.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
     const call = () =>
       httpClient.post(
         NVIDIA_BASE_URL,
         {
           model: request.model,
-          messages: request.messages,
+          messages: cleanMessages,
           temperature: request.temperature ?? 0.7,
           max_tokens: request.maxTokens ?? 2048,
         },

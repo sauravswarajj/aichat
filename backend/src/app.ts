@@ -1,11 +1,8 @@
 /**
  * app.ts
  * -----------------------------------------------------------------------------
- * Builds and configures the Express app: security headers, CORS, JSON body
- * parsing, request logging, API routes, and the final error handler.
- *
- * Kept separate from server.ts so the app can be imported directly in tests
- * later (e.g. with supertest) without actually starting a listening server.
+ * Express application factory. Separated from server.ts so supertest can
+ * mount it in tests without starting a live HTTP listener.
  * -----------------------------------------------------------------------------
  */
 
@@ -24,10 +21,14 @@ export function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.CORS_ORIGIN.split(",").map((origin) => origin.trim()),
+      origin: env.CORS_ORIGIN
+        ? env.CORS_ORIGIN.split(",").map((origin: string) => origin.trim())
+        : "*",
     })
   );
-  app.use(express.json({ limit: "2mb" }));
+  // Support image uploads up to 15mb payload size
+  app.use(express.json({ limit: "15mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "15mb" }));
   app.use(requestLogger);
 
   // Root-level alias (GET /health, no /api prefix) — some uptime bots and

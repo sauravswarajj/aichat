@@ -8,9 +8,9 @@
  * universal ProviderResponse shape. This is the ONLY file in the codebase
  * that needs to know what Gemini's request/response JSON looks like.
  *
- * Free-tier note (checked Aug 2026): Flash/Flash-Lite models have much higher
- * free rate limits than Pro — prefer them for a multi-agent chain where you
- * make several calls per run.
+ * Multimodal Vision Support:
+ * Converts any attached ImageAttachment[] into Gemini's native `inlineData`
+ * parts so Gemini can visually inspect uploaded photos and reference images.
  * -----------------------------------------------------------------------------
  */
 
@@ -26,14 +26,41 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models
 function splitSystemPrompt(messages: ChatMessage[]) {
   const systemMessages = messages.filter((m) => m.role === "system").map((m) => m.content);
   const conversation = messages.filter((m) => m.role !== "system");
+
+  // Gemini API rules:
+  // 1. Contents must end with a 'user' turn so the model knows it is its turn to speak.
+  // 2. Roles cannot be duplicate consecutive 'model' turns.
+  const contents = conversation.map((m, idx) => {
+    const isLast = idx === conversation.length - 1;
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    // Multimodal Vision Support: Attach images if present
+    if (m.images && m.images.length > 0) {
+      for (const img of m.images) {
+        parts.push({
+          inlineData: {
+            mimeType: img.mimeType || "image/jpeg",
+            data: img.data,
+          },
+        });
+      }
+    }
+
+    if (m.content) {
+      parts.push({ text: m.content });
+    }
+
+    return {
+      role: isLast ? "user" : m.role === "assistant" ? "model" : "user",
+      parts: parts.length > 0 ? parts : [{ text: " " }],
+    };
+  });
+
   return {
     systemInstruction: systemMessages.length
       ? { parts: [{ text: systemMessages.join("\n\n") }] }
       : undefined,
-    contents: conversation.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    })),
+    contents: contents.length > 0 ? contents : [{ role: "user", parts: [{ text: "Hello" }] }],
   };
 }
 
@@ -47,9 +74,9 @@ export const geminiProvider: AIProvider = {
 
     const { systemInstruction, contents } = splitSystemPrompt(request.messages);
 
-    const call = () =>
+    const makeCall = (modelName: string) => () =>
       httpClient.post(
-        `${GEMINI_BASE_URL}/${request.model}:generateContent`,
+        `${GEMINI_BASE_URL}/${modelName}:generateContent`,
         {
           contents,
           ...(systemInstruction ? { systemInstruction } : {}),
@@ -67,33 +94,54 @@ export const geminiProvider: AIProvider = {
         }
       );
 
+    let activeModel = request.model;
+    let response: any;
+
     try {
-      const response = await withRetry(call, {
+      response = await withRetry(makeCall(activeModel), {
         retries: env.PROVIDER_MAX_RETRIES,
-        label: `gemini:${request.model}`,
+        label: `gemini:${activeModel}`,
       });
+    } catch (primaryErr: any) {
+      // If primary model hits a high demand spike (503/429), fallback to gemini-3.6-flash or gemini-3.5-flash
+      const isHighDemand =
+        primaryErr?.message?.includes("high demand") ||
+        primaryErr?.response?.status === 503 ||
+        primaryErr?.response?.status === 429;
 
-      const candidate = response.data?.candidates?.[0];
-      const content: string =
-        candidate?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-
-      if (!content) {
-        throw new AppError("Gemini returned an empty response (possibly blocked by safety filters)", 502);
+      if (isHighDemand && activeModel !== "gemini-3.6-flash") {
+        try {
+          activeModel = "gemini-3.6-flash";
+          response = await withRetry(makeCall(activeModel), {
+            retries: 1,
+            label: `gemini:fallback:${activeModel}`,
+          });
+        } catch (fallbackErr) {
+          throw normalizeProviderError(primaryErr, "gemini");
+        }
+      } else {
+        if (primaryErr instanceof AppError) throw primaryErr;
+        throw normalizeProviderError(primaryErr, "gemini");
       }
-
-      return {
-        provider: "gemini",
-        model: request.model,
-        content,
-        usage: {
-          inputTokens: response.data?.usageMetadata?.promptTokenCount,
-          outputTokens: response.data?.usageMetadata?.candidatesTokenCount,
-        },
-        raw: response.data,
-      };
-    } catch (err) {
-      if (err instanceof AppError) throw err;
-      throw normalizeProviderError(err, "gemini");
     }
+
+    const candidate = response.data?.candidates?.[0];
+    const content: string =
+      candidate?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
+
+    if (!content) {
+      throw new AppError("Gemini returned an empty response (possibly blocked by safety filters)", 502);
+    }
+
+    return {
+      provider: "gemini",
+      model: activeModel,
+      content,
+      usage: {
+        inputTokens: response.data?.usageMetadata?.promptTokenCount,
+        outputTokens: response.data?.usageMetadata?.candidatesTokenCount,
+      },
+      raw: response.data,
+    };
   },
 };

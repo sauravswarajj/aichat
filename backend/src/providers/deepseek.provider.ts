@@ -2,14 +2,6 @@
  * providers/deepseek.provider.ts
  * -----------------------------------------------------------------------------
  * Adapter for DeepSeek's API (https://api-docs.deepseek.com).
- * OpenAI-compatible request/response shape, so this mirrors nvidia.provider.ts.
- *
- * Free-tier note (checked Aug 2026): new accounts get a ONE-TIME 5-million-token
- * grant on sign-up, usable across all models — there is no ongoing/permanent
- * free tier. Once that grant is used up, calls will fail with a billing error
- * until you add a payment method. Current model names are `deepseek-chat`
- * (general) and `deepseek-reasoner` (thinking mode) — check DeepSeek's docs
- * if those return a 404, since older/newer aliases do get retired.
  * -----------------------------------------------------------------------------
  */
 
@@ -29,12 +21,17 @@ export const deepseekProvider: AIProvider = {
       throw new AppError("DEEPSEEK_API_KEY is not set in .env", 500);
     }
 
+    const cleanMessages = request.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
     const call = () =>
       httpClient.post(
         DEEPSEEK_BASE_URL,
         {
           model: request.model,
-          messages: request.messages,
+          messages: cleanMessages,
           temperature: request.temperature ?? 0.7,
           max_tokens: request.maxTokens ?? 2048,
         },

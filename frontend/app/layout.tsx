@@ -12,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Multi-AI Workspace | Collaborative AI Studio",
+  title: "Jaishwal AI | Multi-Agent Collaborative Studio",
   description:
-    "A personal multi-AI developer workspace where specialized AI models collaborate through role-based orchestration.",
+    "Jaishwal AI — A personal multi-AI developer workspace where specialized AI models collaborate through role-based orchestration.",
 };
 
 export default function RootLayout({

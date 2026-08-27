@@ -4,9 +4,7 @@
  * A "Thread" = one conversation in the sidebar, exactly like Claude's chat
  * history. Each Thread document embeds its own list of "turns" — one turn
  * per user task sent in that thread, holding everything the agent chain
- * produced for it. Embedding turns (rather than a separate collection) keeps
- * "load one full thread" a single query, which is what the UI needs when
- * reopening an old chat to continue it.
+ * produced for it.
  * -----------------------------------------------------------------------------
  */
 
@@ -39,6 +37,7 @@ export interface ThreadTurnSubdoc {
   agents: AgentConfigSubdoc[];
   messages: AgentMessageSubdoc[];
   finalResult: string;
+  image?: string;
   createdAt: string;
 }
 
@@ -50,7 +49,7 @@ export interface ThreadDocument extends Document {
 }
 
 const agentRoles = ["creator", "reviewer", "critic", "optimizer", "finalizer"];
-const providerNames = ["gemini", "nvidia", "qwen", "openrouter", "deepseek", "grok"];
+const providerNames = ["gemini", "nvidia", "qwen", "openrouter", "deepseek", "grok", "groq"];
 const taskTypes = ["coding", "prompt_engineering", "image_prompt", "video_prompt", "study_research", "general"];
 
 const agentConfigSchema = new Schema<AgentConfigSubdoc>(
@@ -85,6 +84,7 @@ const threadTurnSchema = new Schema<ThreadTurnSubdoc>(
     agents: { type: [agentConfigSchema], required: true },
     messages: { type: [agentMessageSchema], required: true },
     finalResult: { type: String, required: true },
+    image: { type: String, required: false },
     createdAt: { type: String, required: true },
   },
   { _id: false }
