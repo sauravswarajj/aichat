@@ -1,12 +1,11 @@
-import { getAuthToken } from "./api";
+import { getApiBaseUrl, getAuthToken } from "./api";
 import { WorkflowEvent, WorkflowEventType, WorkflowRequest, WorkflowState } from "@/types/api.types";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export const chatService = {
   async runWorkflowJSON(request: WorkflowRequest): Promise<WorkflowState & { threadId: string }> {
+    const baseUrl = getApiBaseUrl();
     const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/chat`, {
+    const response = await fetch(`${baseUrl}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -36,8 +35,9 @@ export const chatService = {
     onEvent: (event: WorkflowEvent) => void,
     signal?: AbortSignal
   ): Promise<void> {
+    const baseUrl = getApiBaseUrl();
     const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/chat/stream`, {
+    const response = await fetch(`${baseUrl}/chat/stream`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

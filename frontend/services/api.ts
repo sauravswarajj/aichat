@@ -1,6 +1,10 @@
 import { STORAGE_KEYS } from "@/lib/constants";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+export function getApiBaseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -37,7 +41,8 @@ interface RequestOptions extends RequestInit {
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, skipAuth = false, headers = {}, ...customConfig } = options;
 
-  let url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const baseUrl = getApiBaseUrl();
+  let url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   if (params) {
     const searchParams = new URLSearchParams(params);
@@ -45,39 +50,30 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
   }
 
   const token = getAuthToken();
+  const authHeaders: Record<string, string> = {};
 
-  const reqHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(token && !skipAuth ? { Authorization: `Bearer ${token}` } : {}),
-    ...(headers as Record<string, string>),
-  };
+  if (!skipAuth && token) {
+    authHeaders["Authorization"] = `Bearer ${token}`;
+  }
 
   const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders,
+      ...headers,
+    },
     ...customConfig,
-    headers: reqHeaders,
   });
 
   if (!response.ok) {
-    let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
     let errorData: unknown;
-
     try {
       errorData = await response.json();
-      if (errorData && typeof errorData === "object" && "error" in errorData) {
-        errorMessage = String((errorData as { error: string }).error);
-      } else if (errorData && typeof errorData === "object" && "message" in errorData) {
-        errorMessage = String((errorData as { message: string }).message);
-      }
     } catch {
-      // Body not JSON
+      errorData = null;
     }
-
-    throw new ApiError(errorMessage, response.status, errorData);
-  }
-
-  // Handle empty responses (like 204)
-  if (response.status === 204) {
-    return {} as T;
+    const message = (errorData as any)?.error || (errorData as any)?.message || `HTTP ${response.status}: ${response.statusText}`;
+    throw new ApiError(message, response.status, errorData);
   }
 
   return response.json();
